@@ -1,0 +1,45 @@
+<header class="barra">
+  <div class="barra__interior">
+    <span class="barra__marca">
+      <img src="/logo.svg" alt="Logo del gimnasio" />
+      Gimnasio Titanes
+    </span>
+    <span class="barra__etiqueta">Panel de administración</span>
+  </div>
+</header>
+
+<main class="pagina">
+  <div class="encabezado">
+    <div>
+      <h1>Tablero</h1>
+      <p>Resumen del catálogo de clases</p>
+    </div>
+    <div class="acciones">
+      <button class="boton boton--peligro" (click)="vaciar()">Vaciar catálogo</button>
+      <button class="boton boton--secundario" (click)="restaurar()">Restaurar catálogo</button>
+    </div>
+  </div>
+
+  <section class="resumen">
+    <div class="resumen__dato">
+      <span class="resumen__numero">{{ totalClases() }}</span>
+      <span class="resumen__texto">Clases en total</span>
+    </div>
+    <div class="resumen__dato">
+      <span class="resumen__numero">{{ minutosSemana() }}</span>
+      <span class="resumen__texto">Minutos a la semana</span>
+    </div>
+    <div class="resumen__dato">
+      <span class="resumen__numero">{{ clasesLargas() }}</span>
+      <span class="resumen__texto">Clases de una hora o más</span>
+    </div>
+  </section>
+
+  <section class="rejilla">
+    @for (c of clases(); track c.id) {
+      <app-tarjeta-clase [clase]="c" />
+    } @empty {
+      <p class="vacio">No hay clases en el catálogo.</p>
+    }
+  </section>
+</main>
