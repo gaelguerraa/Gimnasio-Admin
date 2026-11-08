@@ -1,4 +1,4 @@
-<article class="tarjeta-clase">
+<article class="tarjeta-clase" [class.tarjeta-clase--activa]="activa()" (click)="seleccionada.emit(clase())" (keydown.enter)="seleccionada.emit(clase())" tabindex="0">
   <img [src]="clase().imagen" [alt]="clase().nombre" />
 
   <div class="tarjeta-clase__cuerpo">

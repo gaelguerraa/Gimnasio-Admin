@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import type { Clase } from '../modelos/clase';
 
 @Component({
@@ -9,4 +9,6 @@ import type { Clase } from '../modelos/clase';
 export class TarjetaClase {
   // La clase es obligatoria: el padre siempre tiene que mandarla
   clase = input.required<Clase>();
+  activa = input(false);
+  seleccionada = output<Clase>();
 }

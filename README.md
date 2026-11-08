@@ -25,3 +25,14 @@ En el componente principal se usa `@for` para mostrar todas las tarjetas y `@emp
 Por otro lado, `track` sirve para que Angular pueda identificar cada elemento dentro del `@for`. En este caso se utiliza `c.id`, que es el identificador de cada clase.
 
 Esto ayuda a que, cuando se modifica la lista, Angular no tenga que volver a crear todos los elementos, sino que pueda reutilizar los que ya existen. Es algo parecido al `key` que se utiliza en React, con la diferencia de que en Angular es obligatorio dentro de `@for`.
+# Práctica 21 · Signals, filtros y detalle
+
+## Conceptos
+
+- `signal()` guarda un valor que puede cambiar y notifica a sus consumidores. Se parece a `useState`.
+- `computed()` deriva un valor de uno o más signals y se recalcula cuando cambian. Se parece a `useMemo`.
+- `inject(Catalogo)` obtiene la instancia compartida por el inyector raíz. `new Catalogo()` crea un objeto distinto, fuera de la inyección de dependencias: el filtro y el tablero dejarían de compartir estado.
+
+## NG8109
+
+Angular avisa con NG8109 cuando una plantilla lee un signal sin invocarlo. Para reproducirlo, en `src/app/app.html` cambia temporalmente `catalogo.clasesVisibles()` por `catalogo.clasesVisibles` en el `@for`; el compilador señalará que el signal debe invocarse en la plantilla. La forma corregida queda como `catalogo.clasesVisibles()`.

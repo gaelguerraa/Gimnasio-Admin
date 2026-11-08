@@ -1,0 +1,6 @@
+.contenido-tablero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.contenido-tablero.con-detalle { grid-template-columns: minmax(0, 1fr) 300px; }
+.detalle { position: sticky; top: 1rem; padding: 1.25rem; border: 1px solid #e4e7ec; border-radius: 1rem; background: white; box-shadow: 0 4px 16px #10182812; }
+.detalle > img { width: 100%; max-height: 180px; object-fit: cover; border-radius: .75rem; }
+.detalle__cerrar { float: right; border: 0; background: transparent; font-size: 1.5rem; cursor: pointer; }
+@media (max-width: 900px) { .contenido-tablero.con-detalle { grid-template-columns: 1fr; } .detalle { position: static; } }

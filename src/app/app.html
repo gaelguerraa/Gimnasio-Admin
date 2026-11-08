@@ -26,8 +26,8 @@
       <span class="resumen__texto">Clases en total</span>
     </div>
     <div class="resumen__dato">
-      <span class="resumen__numero">{{ minutosSemana() }}</span>
-      <span class="resumen__texto">Minutos a la semana</span>
+      <span class="resumen__numero">{{ catalogo.minutosVisibles() }}</span>
+      <span class="resumen__texto">Minutos de las clases visibles</span>
     </div>
     <div class="resumen__dato">
       <span class="resumen__numero">{{ clasesLargas() }}</span>
@@ -35,11 +35,24 @@
     </div>
   </section>
 
-  <section class="rejilla">
-    @for (c of clases(); track c.id) {
-      <app-tarjeta-clase [clase]="c" />
-    } @empty {
-      <p class="vacio">No hay clases en el catálogo.</p>
+  <app-filtro-categoria />
+  <div class="contenido-tablero" [class.con-detalle]="catalogo.claseSeleccionada() !== null">
+    <section class="rejilla">
+      @for (c of catalogo.clasesVisibles(); track c.id) {
+        <app-tarjeta-clase [clase]="c" [activa]="catalogo.claseSeleccionada()?.id === c.id" (seleccionada)="catalogo.seleccionarClase($event)" />
+      } @empty {
+        <p class="vacio">No hay clases para esta categoría.</p>
+      }
+    </section>
+    @if (catalogo.claseSeleccionada(); as clase) {
+      <aside class="detalle" aria-live="polite">
+        <button class="detalle__cerrar" type="button" aria-label="Cerrar detalle" (click)="catalogo.seleccionarClase(null)">×</button>
+        <img [src]="clase.imagen" [alt]="clase.nombre" />
+        <h2>{{ clase.nombre }}</h2>
+        <p>{{ clase.descripcion }}</p>
+        <p><strong>Categoría:</strong> {{ clase.categoria }}</p>
+        <p><strong>Duración:</strong> {{ clase.duracionMin }} minutos</p>
+      </aside>
     }
-  </section>
+  </div>
 </main>

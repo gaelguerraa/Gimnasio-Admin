@@ -1,32 +1,27 @@
-import { Component, computed, signal } from '@angular/core';
-import { CLASES_LOCALES } from './datos/clases-locales';
-import type { Clase } from './modelos/clase';
+import { Component, computed, inject } from '@angular/core';
+import { Catalogo } from './servicios/catalogo';
+import { FiltroCategoria } from './filtro-categoria/filtro-categoria';
 import { TarjetaClase } from './tarjeta-clase/tarjeta-clase';
 
 @Component({
   selector: 'app-root',
-  imports: [TarjetaClase],
+  imports: [TarjetaClase, FiltroCategoria],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
-  clases = signal<Clase[]>(CLASES_LOCALES);
-
-  totalClases = computed(() => this.clases().length);
-
-  minutosSemana = computed(() =>
-    this.clases().reduce((suma, c) => suma + c.duracionMin, 0),
-  );
+  readonly catalogo = inject(Catalogo);
+  totalClases = computed(() => this.catalogo.clases().length);
 
   clasesLargas = computed(
-    () => this.clases().filter((c) => c.duracionMin >= 60).length,
+    () => this.catalogo.clases().filter((c) => c.duracionMin >= 60).length,
   );
 
   vaciar() {
-    this.clases.set([]);
+    this.catalogo.vaciar();
   }
 
   restaurar() {
-    this.clases.set(CLASES_LOCALES);
+    this.catalogo.restaurar();
   }
 }

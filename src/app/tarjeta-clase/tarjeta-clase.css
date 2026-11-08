@@ -1,0 +1,2 @@
+.tarjeta-clase { cursor: pointer; }
+.tarjeta-clase--activa { outline: 3px solid #174c3c; outline-offset: 2px; }
