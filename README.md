@@ -1,38 +1,52 @@
-## Ejercicio 1: El proyecto y el tablero
+# Práctica 21 · Router, formularios y catálogo desde API
 
-En el componente principal (`src/app/app.ts` y `app.html`) se guardan las clases utilizando un signal. También se usan tres `computed` para calcular el total de clases, la suma de los minutos y cuántas clases duran 60 minutos o más.
+## Requisitos y ejecución
 
-Con las 8 clases que tenemos registradas, el resultado es de 8 clases, 380 minutos por semana y 2 clases que duran una hora o más.
+- Proyecto: `Gimnasio-Admin`, rama de trabajo **Práctica 21**.
+- Frontend Angular 22. Backend: `../Practica15_Gimnasio_Backend-main/Practica15_Gimnasio_Backend-main` (actualizado a Unidad IV; para esta práctica se usa hasta el Ejercicio 3).
+- Configura y arranca MySQL y el backend siguiendo su README. La API debe quedar en `http://localhost:3000`.
+- En `gimnasio-admin`, ejecuta `npm install` y `npm start`; Angular estará en `http://localhost:4200`.
 
-**¿Qué archivo de Angular hace el papel de main.tsx, de App.tsx y de vite.config.ts?**
+La URL de la API está centralizada en `src/app/config.ts`. El endpoint público `GET /clases` regresa un sobre `{ data, meta }`; las imágenes usan rutas como `/img/clase-01.jpg` y se sirven desde el backend.
 
-- `main.tsx` sería `src/main.ts` en Angular, ya que es el archivo que se encarga de iniciar la aplicación mediante `bootstrapApplication(App, appConfig)`. Las configuraciones globales se encuentran en `app.config.ts`.
-- `App.tsx` sería `src/app/app.ts` junto con `app.html`, porque ahí se encuentra el componente principal y lo que se muestra en pantalla.
-- `vite.config.ts` sería parecido a `angular.json`, ya que ahí se configuran cosas del proyecto como la compilación, los estilos y las carpetas que se utilizan. También se complementa con los archivos `tsconfig`.
+## Ejercicio 1: el router y las páginas
 
-## Ejercicio 2: La tarjeta de una clase
+Se crearon las páginas `lista-clases`, `horarios` y `miembros`. Las rutas están en `src/app/app.routes.ts`; la ruta vacía redirige a `/clases` con `pathMatch: 'full'` y la comodín redirige al catálogo. `provideRouter(routes)` registra el router en `app.config.ts`. La barra de navegación usa `routerLink`, `routerLinkActive` y `<router-outlet>`.
 
-En este ejercicio se creó el componente `tarjeta-clase`, que recibe la información de cada clase mediante `clase = input.required<Clase>()`. En la tarjeta se muestra la imagen, el nombre, la descripción, la categoría y la duración.
+El tablero de la Práctica 20 vive ahora en la página `lista-clases`. Horarios y Miembros muestran su saludo inicial.
 
-También se utilizó `@if` para que aparezca la etiqueta "Larga" solamente cuando una clase dura 60 minutos o más.
+**¿Qué pieza de React Router corresponde a `router-outlet`, `routerLink` y `routerLinkActive`?**
 
-En el componente principal se usa `@for` para mostrar todas las tarjetas y `@empty` para mostrar un mensaje cuando no hay clases registradas. Además, se agregaron los botones "Vaciar catálogo" y "Restaurar catálogo", que permiten modificar la lista de clases mediante el signal.
+- `<router-outlet>` cumple el papel de `<Outlet />`: es el espacio donde se renderiza la página de la ruta activa.
+- `routerLink` corresponde a `<Link to="…">`: navega sin recargar toda la aplicación.
+- `routerLinkActive` se parece a `NavLink`: aplica una clase cuando el enlace corresponde a la ruta activa.
 
-**¿Por qué clase() lleva paréntesis y para qué sirve track?**
+**¿Por qué la ruta comodín (`**`) va al final y la ruta vacía necesita `pathMatch: 'full'`?**
 
-`clase()` lleva paréntesis porque `input.required()` devuelve un signal y no el objeto directamente. Por eso, para obtener la información que tiene guardada, tenemos que llamarlo como si fuera una función. Esto también permite que Angular detecte los cambios y actualice la información que se muestra en pantalla.
+Angular prueba las rutas en orden. La comodín coincide con cualquier URL restante, así que antes de las rutas válidas las interceptaría. La ruta vacía usa por defecto coincidencia por prefijo; como cualquier URL empieza con una cadena vacía, sin `pathMatch: 'full'` podría redirigir también rutas como `/horarios`. `full` exige que la URL completa esté vacía.
 
-Por otro lado, `track` sirve para que Angular pueda identificar cada elemento dentro del `@for`. En este caso se utiliza `c.id`, que es el identificador de cada clase.
+## Ejercicio 2: formulario de nueva clase
 
-Esto ayuda a que, cuando se modifica la lista, Angular no tenga que volver a crear todos los elementos, sino que pueda reutilizar los que ya existen. Es algo parecido al `key` que se utiliza en React, con la diferencia de que en Angular es obligatorio dentro de `@for`.
-# Práctica 21 · Signals, filtros y detalle
+La ruta `/clases/nueva` abre el formulario con `FormBuilder` y validadores para nombre, categoría, descripción, duración e imagen. Los errores se muestran después de tocar el control; al intentar guardar, todos se marcan como tocados. El validador propio `multiploDeCinco` acepta duraciones en bloques de cinco minutos. El formulario válido presenta el objeto `ClaseNueva` que se enviaría, sin realizar una petición.
 
-## Conceptos
+**¿Dónde vive el valor de un campo en un formulario reactivo y en qué se diferencia del `useState` de React?**
 
-- `signal()` guarda un valor que puede cambiar y notifica a sus consumidores. Se parece a `useState`.
-- `computed()` deriva un valor de uno o más signals y se recalcula cuando cambian. Se parece a `useMemo`.
-- `inject(Catalogo)` obtiene la instancia compartida por el inyector raíz. `new Catalogo()` crea un objeto distinto, fuera de la inyección de dependencias: el filtro y el tablero dejarían de compartir estado.
+El valor vive en el `FormControl` que forma parte del `FormGroup` de Angular; se consulta en el modelo del formulario, por ejemplo `formulario.controls.nombre.value`. Angular también guarda ahí estado como `touched`, `dirty` y `valid`. Con `useState`, normalmente se mantiene cada valor en estado del componente y se conecta el input mediante `value` y `onChange`; el formulario reactivo agrupa valores, validaciones y estado en un modelo explícito.
 
-## NG8109
+**¿Qué regresa un validador propio cuando el valor es válido o no, y cómo se relaciona con `hasError`?**
 
-Angular avisa con NG8109 cuando una plantilla lee un signal sin invocarlo. Para reproducirlo, en `src/app/app.html` cambia temporalmente `catalogo.clasesVisibles()` por `catalogo.clasesVisibles` en el `@for`; el compilador señalará que el signal debe invocarse en la plantilla. La forma corregida queda como `catalogo.clasesVisibles()`.
+Un validador devuelve `null` cuando el valor es válido. Si no cumple, devuelve un objeto con una clave de error, aquí `{ multiploDeCinco: true }`. Angular registra esa clave en los errores del control, y `hasError('multiploDeCinco')` permite consultarla para mostrar el mensaje correspondiente.
+
+## Ejercicio 3: catálogo desde la API
+
+El servicio `Catalogo` obtiene `GET /clases` con `httpResource`, conserva el filtro y la selección como signals y deriva la lista desde `data` del sobre. La página muestra carga y error. Las tarjetas y el detalle construyen la URL absoluta de imagen usando `API_URL`. Se eliminaron los datos de clases escritos localmente y las imágenes locales del frontend; la API es la fuente del catálogo y de sus imágenes.
+
+El backend entregado ya contiene los cambios de Unidad IV. El endpoint `GET /clases` tiene `@Publico()`, por eso el guard global no requiere token para leer el catálogo. Las operaciones de escritura sí están protegidas por rol administrador.
+
+**¿Qué cambió en el servicio del catálogo y por qué ningún componente se enteró?**
+
+Antes el servicio iniciaba un signal con un arreglo importado de clases locales. Ahora `httpResource` carga la respuesta de la API y `clases` deriva su contenido de `value()?.data`; el resto del servicio conserva las señales y operaciones de lectura que usa la interfaz. Los componentes dependen de la interfaz pública del servicio (`clases`, `clasesVisibles`, filtros y selección), no de cómo se obtienen los datos. Por eso no hubo que cambiar sus consumidores, salvo formar las URL de imagen para apuntar al servidor.
+
+**¿Por qué no hizo falta iniciar sesión para leer el catálogo?**
+
+El controlador del backend marca `GET /clases` como público con `@Publico()`. El guard JWT global omite la autenticación para esa ruta; el acceso público al catálogo es independiente de que las rutas de administración requieran rol.

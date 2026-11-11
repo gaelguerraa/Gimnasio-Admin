@@ -1,12 +1,16 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { CLASES_LOCALES } from '../datos/clases-locales';
-import type { Categoria, Clase } from '../modelos/clase';
+import { httpResource } from '@angular/common/http';
+import { API_URL } from '../config';
+import type { Categoria, Clase, Sobre } from '../modelos/clase';
 
 export type FiltroCategoria = Categoria | 'todas';
 
 @Injectable({ providedIn: 'root' })
 export class Catalogo {
-  readonly clases = signal<Clase[]>(CLASES_LOCALES);
+  readonly recurso = httpResource<Sobre<Clase[]>>(() => `${API_URL}/clases`);
+  readonly clases = computed(() => this.recurso.value()?.data ?? []);
+  readonly cargando = this.recurso.isLoading;
+  readonly error = this.recurso.error;
   readonly categoriaElegida = signal<FiltroCategoria>('todas');
   readonly claseSeleccionada = signal<Clase | null>(null);
   readonly clasesVisibles = computed(() => {
@@ -15,6 +19,10 @@ export class Catalogo {
   });
   readonly minutosVisibles = computed(() => this.clasesVisibles().reduce((total, clase) => total + clase.duracionMin, 0));
 
+  imagenUrl(ruta: string): string {
+    return new URL(ruta, API_URL).toString();
+  }
+
   elegirCategoria(categoria: FiltroCategoria) {
     this.categoriaElegida.set(categoria);
     const seleccionada = this.claseSeleccionada();
@@ -22,6 +30,4 @@ export class Catalogo {
   }
 
   seleccionarClase(clase: Clase | null) { this.claseSeleccionada.set(clase); }
-  vaciar() { this.clases.set([]); this.claseSeleccionada.set(null); }
-  restaurar() { this.clases.set(CLASES_LOCALES); this.claseSeleccionada.set(null); }
 }
