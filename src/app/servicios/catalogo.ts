@@ -19,6 +19,8 @@ export class Catalogo {
   });
   readonly minutosVisibles = computed(() => this.clasesVisibles().reduce((total, clase) => total + clase.duracionMin, 0));
 
+  recargar(): void { this.recurso.reload(); }
+
   imagenUrl(ruta: string): string {
     return new URL(ruta, API_URL).toString();
   }

@@ -33,7 +33,9 @@ import { mensajeError } from '../servicios/errores';
             <button class="detalle__cerrar" type="button" aria-label="Cerrar detalle" (click)="catalogo.seleccionarClase(null)">×</button>
             <img [src]="catalogo.imagenUrl(clase.imagen)" [alt]="clase.nombre" />
             <h2>{{ clase.nombre }}</h2><p>{{ clase.descripcion }}</p>
+            <a class="boton boton--secundario" [routerLink]="['/clases', clase.id, 'editar']">Editar</a>
             <p><strong>Categoría:</strong> {{ clase.categoria }}</p><p><strong>Duración:</strong> {{ clase.duracionMin }} minutos</p>
+            <a class="boton boton--secundario" [routerLink]="['/clases', clase.id, 'editar']">Editar</a>
           </aside>
         }
       </div>

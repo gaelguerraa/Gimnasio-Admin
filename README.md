@@ -50,3 +50,70 @@ Antes el servicio iniciaba un signal con un arreglo importado de clases locales.
 **¿Por qué no hizo falta iniciar sesión para leer el catálogo?**
 
 El controlador del backend marca `GET /clases` como público con `@Publico()`. El guard JWT global omite la autenticación para esa ruta; el acceso público al catálogo es independiente de que las rutas de administración requieran rol.
+
+# Práctica 22 – Operaciones HTTP, sesión y edición de clases
+
+## Preparación y ejecución
+
+El frontend se ejecuta desde `gimnasio-admin` con `npm install` y `npm start`. La API de la práctica está en `../Practica15_Gimnasio_Backend-main/Practica15_Gimnasio_Backend-main`; requiere MySQL de la configuración local en `.env`. Con MySQL disponible, ejecutar `npm run prisma:seed` para recrear las cuentas y los datos de prueba, y después `npm run start:dev`. El seed borra y vuelve a crear los datos de la base configurada.
+
+Cuentas que crea el seed local. La clave se define en prisma/seed.ts del backend y no se publica aquí.
+
+| Correo | Rol |
+|---|---|
+| `admin@itson.mx` | administrador |
+| `karla@itson.mx` | miembro |
+
+`GET /clases` continúa siendo público. Para demostrar el `401` antes del login, enviar un `POST /clases` sin encabezado `Authorization`; el alta, edición y eliminación requieren rol administrador. El login responde dentro del sobre `{ data, meta }` de la API.
+
+## Ejercicio 1: guardar con POST
+
+`ClasesApi` usa `HttpClient` para crear una clase. El formulario convierte `duracionMin` a número y envía el mismo DTO que entiende el backend. Si la respuesta es correcta recarga el recurso del catálogo y navega a `/clases`; mientras hay una petición, deshabilita los botones. Si el servidor regresa un error, la interfaz muestra `message`, incluyendo los arreglos de mensajes que produce `ValidationPipe` con HTTP 400.
+
+Para verificar autorización, el endpoint `POST /clases` debe permanecer con `@Roles(Rol.admin)`. Sin token responde 401. Al cambiar temporalmente el decorador a `@Publico()` y reiniciar el backend, se puede guardar una clase sin login; al reponer `@Roles(Rol.admin)`, el mismo POST sin token vuelve a responder 401. El DTO del backend conserva sus validadores de nombre y duración; al quitarlos solo durante la prueba, el frontend muestra los mensajes devueltos por los validadores restantes.
+
+**Si el formulario ya valida, ¿por qué también valida el servidor?**
+
+El navegador no es una frontera de seguridad: se pueden omitir sus validaciones llamando la API directamente, usando otro cliente o manipulando la petición. La validación del servidor protege la base de datos y mantiene las reglas para todos los consumidores.
+
+**¿Por qué `httpResource` para leer y `HttpClient` para crear, editar y eliminar?**
+
+`httpResource` encaja con lecturas que alimentan estado de interfaz: expone carga, error y datos de forma reactiva. Las mutaciones son acciones explícitas del usuario y `HttpClient` permite decidir cuándo enviar POST/PATCH/DELETE y qué hacer después de la respuesta, como recargar el catálogo y navegar.
+
+**¿Qué pasa si se olvida el `subscribe()`?**
+
+El observable de `HttpClient` es perezoso. Si nadie se suscribe, no se envía la petición y no se ejecutan ni el servidor ni los callbacks de éxito o error.
+
+## Ejercicio 2: login, interceptores y guardia
+
+`Sesion` guarda el token Bearer y el usuario de sesión en `localStorage`. `authInterceptor` agrega `Authorization: Bearer …` a las peticiones a la API. `soloAdminGuard` protege las rutas hijas del panel; el login queda público. El componente raíz solo tiene `<router-outlet />`; `Panel` contiene la barra de navegación y el outlet para Clases, Horarios y Miembros. Las páginas y el formulario se cargan de forma diferida con `loadComponent`.
+
+**¿A qué pieza de React corresponden las rutas hijas, el interceptor y el guardia?**
+
+Las rutas hijas se parecen a las rutas anidadas de React Router y el outlet del panel a `<Outlet />`. Un interceptor se parece a una capa middleware que transforma las peticiones de `fetch` o de un cliente HTTP antes de enviarlas. El guardia equivale al patrón de ruta protegida o a una comprobación de autorización en un loader; React Router no impone una única API idéntica a `CanActivate`.
+
+**¿Cuándo se ejecuta el guardia y por qué `salir()` tiene que navegar al login?**
+
+`canActivateChild` se ejecuta durante la navegación y antes de activar una ruta hija. `salir()` borra token y usuario y navega a `/login` para terminar la vista actual del panel y mostrar una ruta pública; el guardia redirige a quien intente volver a una ruta protegida.
+
+## Ejercicio 3: editar, eliminar y salida con cambios
+
+La ruta `/clases/:id/editar` enlaza `id` al input del componente gracias a `withComponentInputBinding()`. El formulario usa `patchValue` para cargar el registro; con id llama PATCH y sin id llama POST. El catálogo incluye un botón Editar en el detalle lateral. El botón Eliminar pide confirmación, envía DELETE y al completar recarga la lista. `cambiosSinGuardarGuard` pregunta antes de abandonar el formulario cuando está `dirty`; después de guardar correctamente el formulario vuelve a `pristine`.
+
+**¿Cómo decide un mismo formulario, con dos rutas, si manda POST o PATCH?**
+
+Comprueba si recibió el `id` de la ruta. Sin id, es una creación y manda POST a `/clases`; con id, es edición y manda PATCH a `/clases/:id`.
+
+**¿Por qué el estado del formulario no se puede observar con un `computed()`?**
+
+`computed()` rastrea señales. `FormGroup.dirty` y `FormGroup.value` son propiedades del modelo de formularios reactivos, no señales; leerlas dentro de un `computed()` no crea una dependencia reactiva. Se pueden consultar al enviar o convertir `valueChanges`/`statusChanges` en señales cuando se necesita una vista derivada.
+
+**¿Qué diferencia hay entre `canActivate` y `canDeactivate`, y qué casos no cubre la guarda de salida?**
+
+`canActivate` decide si una ruta puede abrirse antes de activarla. `canDeactivate` pregunta si se puede abandonar un componente ya activo, aquí para evitar perder cambios. La guarda no evita cerrar o recargar la pestaña, cerrar el navegador, una caída del proceso ni cambios fuera de la navegación controlada por Angular.
+
+## Evidencias
+
+Guardar las capturas reales de la ejecución en `evidencias/` con nombres descriptivos: `01-validacion-servidor.png`, `02-post-401-sin-login.png`, `03-login-miembro-rechazado.png`, `04-post-201-authorization.png`, `05-edicion-patch.png`, `06-delete-200.png` y `07-confirmacion-can-deactivate.png`. La pestaña Red debe mostrar el encabezado `Authorization` en la captura del POST 201. No se deben incluir capturas fabricadas ni datos sensibles del token.
+
+
