@@ -1,0 +1,40 @@
+<div class="encabezado">
+  <div>
+    <h1>Detalle de clase</h1>
+    <p>Consulta de horarios y disponibilidad por sesión.</p>
+  </div>
+  <a class="boton boton--secundario" routerLink="/clases">Volver al catálogo</a>
+</div>
+
+@if (cargando()) {
+  <div class="cargando">Cargando información de la clase...</div>
+} @else if (error(); as msgError) {
+  <div class="aviso aviso--error">{{ msgError }}</div>
+} @else if (clase(); as info) {
+  <div class="tarjeta">
+    <h2>{{ info.nombre }}</h2>
+    <p>{{ info.descripcion }}</p>
+    <div class="acciones">
+      <span class="etiqueta etiqueta--{{ info.categoria }}">{{ info.categoria | titlecase }}</span>
+      <span class="etiqueta etiqueta--min">{{ info.duracionMin }} min</span>
+      <a class="boton boton--chico" [routerLink]="['/clases', info.id, 'editar']">Editar clase</a>
+    </div>
+
+    <h3 style="margin-top: 1.2rem">Horarios programados</h3>
+    <ul class="horarios">
+      @for (h of info.horarios; track h.id) {
+        <li class="horario">
+          <div>
+            <div class="horario__cuando">{{ h.dia }} · {{ h.horaInicio }}</div>
+            <div class="horario__quien">Entrenador: {{ h.entrenador }}</div>
+          </div>
+          <span class="etiqueta" [class.etiqueta--lleno]="h.disponibles === 0">
+            {{ h.disponibles }} / {{ h.cupoMaximo }} lugares
+          </span>
+        </li>
+      } @empty {
+        <li class="vacio">Esta clase aún no tiene horarios asignados.</li>
+      }
+    </ul>
+  </div>
+}

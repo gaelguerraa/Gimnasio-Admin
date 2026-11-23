@@ -1,0 +1,39 @@
+<div class="login">
+  <div class="tarjeta">
+    <div class="login__marca">
+      <img src="/logo.svg" alt="Arena Fit" />
+      <div>
+        <h2>Arena Fit</h2>
+        <span class="etiqueta">Acceso administrativo</span>
+      </div>
+    </div>
+
+    <p>Inicia sesión con una cuenta de administrador para gestionar el catálogo.</p>
+
+    @if (error(); as mensaje) {
+      <div class="aviso aviso--error">{{ mensaje }}</div>
+    }
+
+    <form [formGroup]="formulario" (ngSubmit)="entrar()">
+      <div class="campo">
+        <label for="correo">Correo electrónico</label>
+        <input id="correo" type="email" formControlName="correo" placeholder="admin@itson.mx" />
+        @if (formulario.controls.correo.invalid && formulario.controls.correo.touched) {
+          <span class="error">Ingresa un correo válido.</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" formControlName="password" placeholder="••••••••" />
+        @if (formulario.controls.password.invalid && formulario.controls.password.touched) {
+          <span class="error">La contraseña es obligatoria.</span>
+        }
+      </div>
+
+      <button class="boton" type="submit" [disabled]="cargando()" style="width: 100%">
+        {{ cargando() ? 'Verificando...' : 'Entrar al panel' }}
+      </button>
+    </form>
+  </div>
+</div>

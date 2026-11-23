@@ -1,0 +1,97 @@
+<div class="encabezado">
+  <div>
+    <h1>Catálogo de clases</h1>
+    <p>Conectado a la API · Práctica 23</p>
+  </div>
+  <a class="boton" routerLink="/clases/nueva">+ Nueva clase</a>
+</div>
+
+<div class="buscador">
+  <input
+    type="search"
+    [formControl]="busqueda"
+    placeholder="Buscar clase por nombre..."
+    aria-label="Buscar clase por nombre" />
+  @if (busqueda.value) {
+    <button type="button" class="boton boton--secundario boton--chico" (click)="limpiarBusqueda()">
+      Limpiar
+    </button>
+  }
+  <span class="buscador__estado">
+    @if (servicioCatalogo.cargando()) {
+      Buscando...
+    }
+  </span>
+</div>
+
+@if (errorAccion(); as msgError) {
+  <div class="aviso aviso--error">{{ msgError }}</div>
+}
+
+@if (servicioCatalogo.cargando() && servicioCatalogo.clasesFiltradas().length === 0) {
+  <div class="cargando">Cargando catálogo desde la API...</div>
+} @else if (servicioCatalogo.error(); as mensajeError) {
+  <div class="aviso aviso--error">{{ mensajeError }}</div>
+} @else {
+  <section class="resumen">
+    <div class="resumen__dato">
+      <span class="resumen__numero">{{ servicioCatalogo.clasesFiltradas().length }}</span>
+      <span class="resumen__texto">clases mostradas</span>
+    </div>
+    <div class="resumen__dato">
+      <span class="resumen__numero">{{ servicioCatalogo.totalMinutos() }}</span>
+      <span class="resumen__texto">minutos semanales</span>
+    </div>
+  </section>
+
+  <app-filtro-categoria />
+
+  <div class="tablero">
+    <div class="rejilla">
+      @for (item of servicioCatalogo.clasesFiltradas(); track item.id) {
+        <app-tarjeta-clase
+          [clase]="item"
+          [activa]="item.id === servicioCatalogo.claseActiva()?.id"
+          (seleccionar)="servicioCatalogo.alternarSeleccion($event)" />
+      } @empty {
+        <p class="vacio">
+          @if (servicioCatalogo.terminoBusqueda()) {
+            No se encontraron clases que coincidan con "{{ servicioCatalogo.terminoBusqueda() }}".
+          } @else {
+            No se encontraron clases para esta categoría.
+          }
+        </p>
+      }
+    </div>
+
+    <aside class="tarjeta lateral">
+      @if (servicioCatalogo.claseActiva(); as detalle) {
+        <img [src]="urlImagen(detalle.imagen)" [alt]="detalle.nombre" />
+        <h2>{{ detalle.nombre }}</h2>
+        <p>{{ detalle.descripcion }}</p>
+        <div class="dato">
+          <span class="dato__clave">Categoría</span>
+          <span class="dato__valor">{{ detalle.categoria | titlecase }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato__clave">Duración</span>
+          <span class="dato__valor">{{ detalle.duracionMin }} min</span>
+        </div>
+
+        <div class="acciones">
+          <a class="boton boton--chico" [routerLink]="['/clases', detalle.id, 'editar']">Editar</a>
+          <a class="boton boton--secundario boton--chico" [routerLink]="['/clases', detalle.id]">Horarios</a>
+          <button
+            type="button"
+            class="boton boton--peligro boton--chico"
+            [disabled]="eliminando()"
+            (click)="eliminarClase(detalle)">
+            {{ eliminando() ? 'Eliminando...' : 'Eliminar' }}
+          </button>
+        </div>
+      } @else {
+        <p class="vacio">Selecciona una clase para consultar su detalle.</p>
+      }
+    </aside>
+  </div>
+}

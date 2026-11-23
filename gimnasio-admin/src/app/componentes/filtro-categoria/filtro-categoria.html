@@ -1,0 +1,10 @@
+<div class="filtro">
+  @for (cat of listaCategorias; track cat) {
+    <button
+      type="button"
+      [class.activo]="servicioCatalogo.categoriaActiva() === cat"
+      (click)="servicioCatalogo.cambiarCategoria(cat)">
+      {{ cat }}
+    </button>
+  }
+</div>
